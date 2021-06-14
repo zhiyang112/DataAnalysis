@@ -1,0 +1,61 @@
+CREATE TABLE profile(
+  profile_id int,
+  name varchar (255),
+  gender varchar(6)
+  );
+
+ CREATE TABLE action(
+  action_id int,
+  action_type varchar (255)
+  );
+  
+CREATE TABLE profile_action(
+  profile_action_id int,
+  profile_id int,
+  action_id int,
+  created_at TIMESTAMP
+  );
+
+
+INSERT INTO profile(profile_id, name, gender)
+VALUES
+(11, 'Alex', 'Male'),
+(22, 'Beth', 'Female'),
+(33, 'Chad', 'Male');
+
+INSERT INTO action(action_id, action_type)
+VALUES
+(1, 'Login'),
+(2, 'Logout'),
+(3, 'Start Assessment'),
+(4, 'Finish Assessment');
+
+INSERT INTO profile_action(profile_action_id, profile_id, action_id, created_at)
+VALUES
+(1, 11, 1, '2020-01-01 01:00:00'),
+(2, 22, 3, '2020-01-01 02:00:00'),
+(3, 11, 3, '2020-01-01 03:00:00'),
+(4, 22, 2, '2020-01-01 04:00:00'),
+(5, 22, 1, '2020-01-01 05:00:00'),
+(6, 11, 4, '2020-01-01 06:00:00'),
+(7, 11, 2, '2020-01-01 07:00:00'),
+(8, 22, 2, '2020-01-01 08:00:00');
+
+SELECT 
+	p.name, p.gender, a.action_type, MAX(pa.created_at) as last_action_time, pa3.action_type as 2nd_last_action,
+    (SELECT MAX(pa3.created_at)) as 2nd_last_action_time
+FROM 
+	profile p                                                                                         
+LEFT JOIN 
+    profile_action pa
+	INNER JOIN action a
+   	ON (pa.action_id = a.action_id)  AND  (pa.created_at = (SELECT MAX(pa2.created_at)
+                                           FROM profile_action pa2 WHERE pa2.profile_id = pa.profile_id))
+    ON pa.profile_id = p.profile_id
+                                                            
+LEFT JOIN (SELECT pa.created_at, pa.profile_id, pa.action_id,
+           a3.action_type
+           FROM profile_action pa INNER JOIN action a3 ON pa.action_id = a3.action_id 
+           ORDER BY created_at DESC LIMIT 2,2) AS pa3 ON p.profile_id = pa3.profile_id
+                                                           
+GROUP BY p.name, p.gender, a.action_type, pa3.action_type
